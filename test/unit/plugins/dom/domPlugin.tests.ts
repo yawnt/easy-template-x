@@ -1,16 +1,24 @@
-import { DomPlugin } from "../../../../src/plugins/dom";
-import { PluginUtilities } from "../../../../src/plugins";
-import { DocxParser } from "../../../../src/office";
-import {XmlNode, XmlParser} from "../../../../src/xml";
+// import { PluginUtilities } from "../../../../src/plugins";
+// import { DocxParser } from "../../../../src/office";
+import {XmlNode, XmlParser/*, XmlParser*/} from "../../../../src/xml";
 import * as xmldom from "xmldom";
+
+import { DomPlugin} from "../../../../src/plugins/dom";
+import { compressDomTreeToParagraphs } from "../../../../src/plugins/dom/blockUtils";
+import { compressDomTreeToRuns } from "../../../../src/plugins/dom/inlineUtils";
+import { TemplateContext } from "../../../../src/compilation";
+import { readFixture } from "../../../fixtures/fixtureUtils";
+import { Zip } from "../../../../src/zip";
+import {DocxParser} from "../../../../src/office";
 
 describe(nameof(DomPlugin), () => {
 
-    describe(nameof(DomPlugin.prototype.traverseDomTree), () => {
+    const xmlDom = new xmldom.DOMParser();
+
+    describe(nameof(compressDomTreeToParagraphs), () => {
 
         it("should flatten the dom tree correctly", () => {
 
-            const xmlDom = new xmldom.DOMParser();
             const doc = xmlDom.parseFromString(`
                 <div>
                 <p><b>bold</b></p>
@@ -18,19 +26,38 @@ describe(nameof(DomPlugin), () => {
                 text
                 </div>`.replace(/\s/g, ''), 'text/html');
 
-            const plugin = new DomPlugin();
-            const pluginUtilities: PluginUtilities = {
-                docxParser: new DocxParser(new XmlParser())
-            } as any;
-            plugin.setUtilities(pluginUtilities);
+            // const plugin = new DomPlugin();
+            // const pluginUtilities: PluginUtilities = {
+            //     docxParser: new DocxParser(new XmlParser())
+            // } as any;
+            // plugin.setUtilities(pluginUtilities);
 
-            plugin.traverseDomTree(doc, doc.documentElement)
+            compressDomTreeToParagraphs(doc, doc.documentElement)
                 .forEach(node => {
                     const xmlNode = XmlNode.fromDomNode(node);
                     console.log(XmlNode.serialize(xmlNode));
                 });
 
         });
+
+    });
+
+    describe(nameof(compressDomTreeToRuns), () => {
+
+        it("should flatten simple dom trees", async () => {
+            const file = readFixture('simple.docx')
+            const docx = await Zip.load(file)
+                .then(zip => new DocxParser(new XmlParser()).load(zip));
+
+            const contentParts = await docx.getContentParts();
+            const context: TemplateContext = {
+                docx,
+                currentPart: contentParts[0]
+            };
+
+            const doc = xmlDom.parseFromString('<u><b>LOL</b><i><u>ASD</u></i><a href="www.google.com"><b>URL</b></a></u>', 'text/html');
+            console.log(XmlNode.serialize(await compressDomTreeToRuns(context, doc.documentElement)));
+        })
 
     });
 
