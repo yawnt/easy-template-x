@@ -9,10 +9,10 @@ import { DomPlugin } from "./dom";
 export function createDefaultPlugins(): TemplatePlugin[] {
     return [
         new LoopPlugin(),
+        new DomPlugin(),
         new RawXmlPlugin(),
         new ImagePlugin(),
         new LinkPlugin(),
         new TextPlugin(),
-        new DomPlugin(),
     ];
 }

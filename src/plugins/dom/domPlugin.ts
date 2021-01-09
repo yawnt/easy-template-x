@@ -10,7 +10,7 @@ export class DomPlugin extends TemplatePlugin {
 
     public async simpleTagReplacements(tag: Tag, data: ScopeData, context: TemplateContext): Promise<void> {
 
-        const replaceNode = this.utilities.docxParser.containingTextNode(tag.xmlTextNode);
+        const replaceNode = this.utilities.docxParser.containingParagraphNode(tag.xmlTextNode);
 
         const value = data.getScopeData<DomContent>();
         if (!value || !value.dom) {
@@ -18,11 +18,12 @@ export class DomPlugin extends TemplatePlugin {
             return;
         }
 
-        const xmlNodes = compressDomTreeToParagraphs(value.dom, value.dom.documentElement)
-            .map(paragraphNode => compressDomTreeToRuns(context, paragraphNode));
-
-        (await Promise.all(xmlNodes))
-            .forEach(xmlNode => XmlNode.appendChild(replaceNode.parentNode, xmlNode));
+        const xmlNodes = await Promise.all(
+            compressDomTreeToParagraphs(value.dom, value.dom.documentElement)
+                .map(paragraphNode => compressDomTreeToRuns(context, paragraphNode)));
+            
+        xmlNodes.forEach(xmlNode => XmlNode.insertBefore(xmlNode, replaceNode));
+        XmlNode.remove(replaceNode);
     }
 
 }

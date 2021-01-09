@@ -15,7 +15,7 @@ function insertIfMissing(node: XmlNode, tag: string, index?: number): XmlNode {
 }
 
 async function enhanceRPR(context: TemplateContext, node: Node, runNode: XmlNode): Promise<XmlNode> {
-    const rprNode = insertIfMissing(runNode, DocxParser.RUN_PROPERTIES_NODE, 0)
+    const rprNode = insertIfMissing(runNode, DocxParser.RUN_PROPERTIES_NODE, 0);
     switch (node.nodeName) {
         case 'a':
             const elem = node as Element;
@@ -50,9 +50,41 @@ async function enhanceRPR(context: TemplateContext, node: Node, runNode: XmlNode
             // label, span
             break;
     }
+    if (!rprNode.childNodes || rprNode.childNodes.length === 0)
+        XmlNode.remove(rprNode);
     return runNode;
 }
 
+function enhancePPR(node: Node, paragraphNode: XmlNode): XmlNode {
+    const pprNode = insertIfMissing(paragraphNode, DocxParser.PARAGRAPH_PROPERTIES_NODE, 0);
+    switch (node.nodeName) {
+        case 'h1':
+            const sizeNode = XmlNode.createGeneralNode('w:sz');
+            sizeNode.attributes = sizeNode.attributes || {};
+            sizeNode.attributes["w:val"] = "28";
+            const sizeNodeCs = XmlNode.createGeneralNode('w:szCs');
+            sizeNodeCs.attributes = sizeNode.attributes;
+            XmlNode.appendChild(pprNode, sizeNode);
+            XmlNode.appendChild(pprNode, sizeNodeCs);
+            break;
+        case 'h2':
+            break;
+        case 'h3':
+            break;
+        case 'h4':
+            break;
+        case 'h5':
+            break;
+        case 'h6':
+            break;
+        case 'hr':
+            break;
+        default:
+            // p
+            break;
+    }
+    return pprNode;
+}
 
 async function compressDomTreeToRunsInner(context: TemplateContext, node: Node): Promise<XmlNode[]> {
     if (node.nodeName === TEXT_NODE_NAME) {
@@ -67,13 +99,14 @@ async function compressDomTreeToRunsInner(context: TemplateContext, node: Node):
     for (const cn of Array.from(node.childNodes)) {
         const runs = await compressDomTreeToRunsInner(context, cn)
             .then(runs => runs.map(cr => enhanceRPR(context, node, cr)));
-        runNodes.push(...await Promise.all(runs))
+        runNodes.push(...await Promise.all(runs));
     }
     return runNodes;
 }
 
 export async function compressDomTreeToRuns(context: TemplateContext, node: Node): Promise<XmlNode> {
     const paragraphNode = XmlNode.createGeneralNode(DocxParser.PARAGRAPH_NODE);
+    enhancePPR(node, paragraphNode);
     return compressDomTreeToRunsInner(context, node)
         .then(childNodes => childNodes.forEach(cn => XmlNode.appendChild(paragraphNode, cn)))
         .then(_ => paragraphNode);
