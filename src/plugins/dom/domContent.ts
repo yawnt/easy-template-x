@@ -1,6 +1,6 @@
 import { PluginContent } from "../pluginContent";
 
-export interface ImageContent extends PluginContent {
+export interface DomContent extends PluginContent {
     _type: 'dom';
     dom: Document;
 }
