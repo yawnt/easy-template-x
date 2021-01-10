@@ -59,31 +59,24 @@ function enhancePPR(node: Node, paragraphNode: XmlNode): XmlNode {
     const pprNode = insertIfMissing(paragraphNode, DocxParser.PARAGRAPH_PROPERTIES_NODE, 0);
     switch (node.nodeName) {
         case 'h1':
-            const sizeNode = XmlNode.createGeneralNode('w:sz');
-            sizeNode.attributes = sizeNode.attributes || {};
-            sizeNode.attributes["w:val"] = "28";
-            const sizeNodeCs = XmlNode.createGeneralNode('w:szCs');
-            sizeNodeCs.attributes = sizeNode.attributes;
-            XmlNode.appendChild(pprNode, sizeNode);
-            XmlNode.appendChild(pprNode, sizeNodeCs);
-            break;
         case 'h2':
-            break;
         case 'h3':
-            break;
         case 'h4':
-            break;
         case 'h5':
-            break;
         case 'h6':
+            const hXNode = XmlNode.createGeneralNode('w:pStyle');
+            hXNode.attributes = hXNode.attributes || {};
+            hXNode.attributes["w:val"] = "Heading";
+            XmlNode.appendChild(pprNode, hXNode);
             break;
         case 'hr':
+            // TODO
             break;
         default:
             // p
             break;
     }
-    return pprNode;
+    return paragraphNode;
 }
 
 async function compressDomTreeToRunsInner(context: TemplateContext, node: Node): Promise<XmlNode[]> {
@@ -106,9 +99,8 @@ async function compressDomTreeToRunsInner(context: TemplateContext, node: Node):
 
 export async function compressDomTreeToRuns(context: TemplateContext, node: Node): Promise<XmlNode> {
     const paragraphNode = XmlNode.createGeneralNode(DocxParser.PARAGRAPH_NODE);
-    enhancePPR(node, paragraphNode);
     return compressDomTreeToRunsInner(context, node)
         .then(childNodes => childNodes.forEach(cn => XmlNode.appendChild(paragraphNode, cn)))
-        .then(_ => paragraphNode);
+        .then(_ => enhancePPR(node, paragraphNode));
 }
 
