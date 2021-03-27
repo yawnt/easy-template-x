@@ -42,6 +42,7 @@ export class Docx {
     public readonly mainDocument: XmlPart;
     public readonly mediaFiles: MediaFiles;
     public readonly contentTypes: ContentTypesFile;
+    public readonly styles: XmlPart;
 
     private readonly _parts: IMap<XmlPart> = {};
 
@@ -65,6 +66,7 @@ export class Docx {
         this.mainDocument = new XmlPart(mainDocumentPath, zip, xmlParser);
         this.mediaFiles = new MediaFiles(zip);
         this.contentTypes = new ContentTypesFile(zip, xmlParser);
+        this.styles = new XmlPart("word/styles.xml", zip, xmlParser);
     }
 
     //
