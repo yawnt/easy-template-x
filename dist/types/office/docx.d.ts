@@ -15,6 +15,7 @@ export declare class Docx {
     readonly mainDocument: XmlPart;
     readonly mediaFiles: MediaFiles;
     readonly contentTypes: ContentTypesFile;
+    readonly styles: XmlPart;
     private readonly _parts;
     get rawZipFile(): Zip;
     private constructor();

@@ -20,8 +20,8 @@ export class DomPlugin extends TemplatePlugin {
 
         const xmlNodes = await Promise.all(
             compressDomTreeToParagraphs(value.dom, value.dom.documentElement)
-                .map(paragraphNode => compressDomTreeToRuns(context, paragraphNode)));
-            
+                .map(paragraphNode => compressDomTreeToRuns(context, paragraphNode, value.style)));
+
         xmlNodes.forEach(xmlNode => XmlNode.insertBefore(xmlNode, replaceNode));
         XmlNode.remove(replaceNode);
     }
